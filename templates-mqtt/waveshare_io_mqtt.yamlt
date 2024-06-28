@@ -1,0 +1,20 @@
+# Template for for Waveshare I/O modules.  Inputs are discrete inputs,
+# outputs are coils.
+#
+# Replace XXXX with topic name, YYYY with network, ZZZZ with device ID
+
+    - topic: XXXX/inputs
+      network: YYYY
+      slave: ZZZZ
+      state:
+        register: 1
+        register_type: bit
+        count: 8
+    - topic: XXXX/outputs
+      network: YYYY
+      slave: ZZZZ
+      state:
+        register: 1
+        register_type: coil
+        count: 8
+        refresh: 5min
