@@ -1,0 +1,33 @@
+# Template for for generic pressure-based water level sensors, e.g.
+# Seeed Studio, QuiDian.  The config for the level register assumes that
+# the decimal_point register is set to 1, ###.# (the default).
+#
+# Replace XXXX with topic name, YYYY with network, ZZZZ with device ID
+
+    - topic: XXXX/units
+      network: YYYY
+      slave: ZZZZ
+      state:
+        register: 3
+        register_type: holding
+        refresh: 60min
+    - topic: XXXX/decimal_point
+      network: YYYY
+      slave: ZZZZ
+      state:
+        register: 4
+        register_type: holding
+        refresh: 60min
+    - topic: XXXX/level
+      network: YYYY
+      slave: ZZZZ
+      state:
+        register: 5
+        register_type: holding
+        converter: std.divide(10,1)
+    - topic: XXXX/zero_point
+      network: YYYY
+      slave: ZZZZ
+      state:
+        register: 6
+        register_type: holding
