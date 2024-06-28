@@ -1,0 +1,101 @@
+# Template for Eastron SDM 2x0 power meters.  This is a subset of the total
+# registers since not all are of interest.
+#
+# Replace XXXX with topic name, YYYY with network, ZZZZ with device ID
+
+    - topic: XXXX/voltage
+      network: YYYY
+      slave: ZZZZ
+      state:
+        converter: std.float32()
+        register: 1
+        register_type: input
+        count: 2
+    - topic: XXXX/current
+      network: YYYY
+      slave: ZZZZ
+      state:
+        converter: std.float32()
+        register: 7
+        register_type: input
+        count: 2
+    - topic: XXXX/active_power
+      network: YYYY
+      slave: ZZZZ
+      state:
+        converter: std.float32()
+        register: 13
+        register_type: input
+        count: 2
+    - topic: XXXX/frequency
+      network: YYYY
+      slave: ZZZZ
+      state:
+        converter: std.float32()
+        register: 71
+        register_type: input
+        count: 2
+    - topic: XXXX/import_energy
+      network: YYYY
+      slave: ZZZZ
+      state:
+        converter: std.float32()
+        register: 73
+        register_type: input
+        count: 2
+    - topic: XXXX/export_energy
+      network: YYYY
+      slave: ZZZZ
+      state:
+        converter: std.float32()
+        register: 75
+        register_type: input
+        count: 2
+    - topic: XXXX/total_demand
+      network: YYYY
+      slave: ZZZZ
+      state:
+        converter: std.float32()
+        register: 85
+        register_type: input
+        count: 2
+    - topic: XXXX/positive_demand
+      network: YYYY
+      slave: ZZZZ
+      state:
+        converter: std.float32()
+        register: 89
+        register_type: input
+        count: 2
+    - topic: XXXX/reverse_demand
+      network: YYYY
+      slave: ZZZZ
+      state:
+        converter: std.float32()
+        register: 93
+        register_type: input
+        count: 2
+    - topic: XXXX/current_demand
+      network: YYYY
+      slave: ZZZZ
+      state:
+        converter: std.float32()
+        register: 259
+        register_type: input
+        count: 2
+    - topic: XXXX/max_current_demand
+      network: YYYY
+      slave: ZZZZ
+      state:
+        converter: std.float32()
+        register: 265
+        register_type: input
+        count: 2
+    - topic: XXXX/total_energy
+      network: YYYY
+      slave: ZZZZ
+      state:
+        converter: std.float32()
+        register: 343
+        register_type: input
+        count: 2
