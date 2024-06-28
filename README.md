@@ -10,6 +10,7 @@ require hand-editing a long YAML config file.  In particular it:
 * Translates device DNS names to their IP addresses.
 * Performs checks for common errors in config files.
 * Generates the required config.yaml and applies it to modmqttd.
+* (Work in progress: Generate matching YAML config files for Home Assistant).
 
 This means the entire process of creating the YAML config file and applying it
 to modmqttd requires only a single command.
@@ -44,7 +45,9 @@ are two commands in there, `compile_header` and `compile_template`.
 the corresponding IP addresses into the config file.  A typical
 `compile_header` command would be:
 
+```
 compile_header outdoors.modbus.lan indoors.modbus.lan basement.modbus.lan
+```
 
 This inserts the IP addresses for `outdoors.modbus.lan` and the other two DNS
 names into the config file.
@@ -53,7 +56,9 @@ names into the config file.
 topic, network, and Modbus address, and adds it to the `config.yaml` file.  A
 typical `compile_template` command would be:
 
+```
 compile_template temp_humid front_door outdoors 10
+```
 
 This takes the template `temp_humid.yamlt`, sets the MQTT topic to
 `front_door`, the network to `outdoors`, and the Modbus address to 10, and
@@ -64,9 +69,11 @@ Modbus device networks with only a few lines of config.  For example if you
 have three outdoors temperature/humidity sensors you can create the config
 file with:
 
+```
 compile_template temp_humid front_door outdoors 10
 compile_template temp_humid back_door outdoors 11
 compile_template temp_humid shed outdoors 12
+```
 
 Finally, mkconfig will apply the new configuration to modmqqtd.  If you don't
 want to apply the new configuration but only generate the config file, run in
