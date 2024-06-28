@@ -1,0 +1,48 @@
+# Template for Wayjun counter module.
+#
+# Replace XXXX with topic name, YYYY with network, ZZZZ with device ID
+
+    - topic: XXXX/working_mode
+      network: YYYY
+      slave: ZZZZ
+      state:
+        register: 1
+        register_type: holding
+        refresh: 60min
+    - topic: XXXX/count_chA
+      network: YYYY
+      slave: ZZZZ
+      state:
+        register: 33
+        register_type: holding
+        count: 2
+        converter: std.int32(low_first)
+    - topic: XXXX/count_chB
+      network: YYYY
+      slave: ZZZZ
+      state:
+        register: 35
+        register_type: holding
+        count: 2
+        converter: std.int32(low_first)
+    - topic: XXXX/pullup_state
+      network: YYYY
+      slave: ZZZZ
+      state:
+        register: 82
+        register_type: holding
+        refresh: 60min
+    - topic: XXXX/debounce_time_chA
+      network: YYYY
+      slave: ZZZZ
+      state:
+        register: 181
+        register_type: holding
+        refresh: 60min
+    - topic: XXXX/debounce_time_chB
+      network: YYYY
+      slave: ZZZZ
+      state:
+        register: 182
+        register_type: holding
+        refresh: 60min
