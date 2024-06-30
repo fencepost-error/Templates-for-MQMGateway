@@ -33,6 +33,8 @@ YAML templates for the following devices are currently provided:
 - Waveshare I/O modules: waveshare_io.yamlt.
 - Wayjun pulse counter modules: pulse_count.yamlt.
 
+There are two subtypes, the `XXX_mqtt.yamlt` files are YAML templates for
+MQMGateway, the `XXX_ha.yamlt` files are YAML templates for Home Assistant.
 All contributions for further devices are welcome.
 
 # Usage
