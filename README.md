@@ -1,19 +1,21 @@
 # Templates-for-MQMGateway
-Script compiler and device templates for MQMGateway
+Script compiler and device templates for MQMGateway and Home Assistant
 
 This is a script compiler and a set of device templates for @BlackZork's
-excellent Modbus-to-MQTT [MQMGateway](https://github.com/BlackZork/mqmgateway/).
-It makes it easier to work with sets of Modbus devices, which would otherwise
-require hand-editing a long YAML config file.  In particular it:
+excellent Modbus-to-MQTT [MQMGateway](https://github.com/BlackZork/mqmgateway/)
+and from there to Home Assistant.  It makes it easier to work with sets of
+Modbus devices, which would otherwise require hand-editing a long YAML config
+file.  In particular it:
 
 * Applies a single template file to as many devices as you specify.
 * Translates device DNS names to their IP addresses.
 * Performs checks for common errors in config files.
 * Generates the required config.yaml and applies it to modmqttd.
-* (Work in progress: Generate matching YAML config files for Home Assistant).
+* Generates the YAML required for use with Home Assistant.
 
 This means the entire process of creating the YAML config file and applying it
-to modmqttd requires only a single command.
+to modmqttd requires only a single command, and the next step to Home
+Assistant just requires adding the YAML to the appropriate HA config file.
 
 # License
 
@@ -60,9 +62,11 @@ typical `compile_template` command would be:
 compile_template temp_humid front_door outdoors 10
 ```
 
-This takes the template `temp_humid.yamlt`, sets the MQTT topic to
+This takes the template `temp_humid_mqtt.yamlt`, sets the MQTT topic to
 `front_door`, the network to `outdoors`, and the Modbus address to 10, and
-adds it to `config.yamlt`.
+adds it to `config.yaml`.  It then takes the template `temp_humid_ha.yamlt`,
+sets the Home Assistant sensor names to `front_door_XXX`, and adds it to
+`homeassistant.yaml`.
 
 The advantage of using templates is that you can very easily set up entire
 Modbus device networks with only a few lines of config.  For example if you
@@ -85,18 +89,14 @@ most explanation.
 
 # Template files
 
-A template file is a standard YAML config as used by MQMGateway, with three
-special placeholders:
+A template file is a standard YAML config as used by MQMGateway and Home
+Assistant, with three special placeholders (HA templates only use the first
+one):
 
 - XXXX in the template is replaced with the MQTT topic name.
 - YYYY in the template is replaced with the Modbus network name.
 - ZZZZ in the template is replaced with the Modbus device address.
 
-To see an example, look at any of the `.yamlt` template files.
-
-# Home Assistant
-
-The next step will be to extend the templates to target use in Home Assistant,
-which would otherwise also require extensive hand-written YAML in order to
-function.  This means that Modbus -> MQTT -> Home Assistant configuration can
-be performed in a single operation.
+To see an example, look at any of the `.yamlt` template files.  The
+`XXX_mqtt.yamlt` files are for MQMGateway, the `XXX_ha.yamlt` files are for
+Home Assistant.
