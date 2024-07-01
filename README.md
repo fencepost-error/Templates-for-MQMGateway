@@ -12,10 +12,12 @@ file.  In particular it:
 * Performs checks for common errors in config files.
 * Generates the required config.yaml and applies it to modmqttd.
 * Generates the YAML required for use with Home Assistant.
+* Generates corresponding JSON for use in Home Assistant dashboards.
 
-This means the entire process of creating the YAML config file and applying it
-to modmqttd requires only a single command, and the next step to Home
-Assistant just requires adding the YAML to the appropriate HA config file.
+This means that the entire process of creating the YAML config file and
+applying it to modmqttd requires only a single command, and the next step to
+Home Assistant just requires adding the YAML to the appropriate HA config file
+and the corresponding JSON to the desktop you want to display the sensors on.
 
 # License
 
@@ -27,14 +29,15 @@ MQMGateway.
 
 YAML templates for the following devices are currently provided:
 
-- Eastron SDM 2x0 power meters: eastron.yamlt.
-- Generic Aliexpress temperature/humidity sensors, e.g. ComWinTop: temp_humid.yamlt.
-- Generic pressure-based water level sensors, e.g. Seeed Studio, QuiDian: water_level.yamlt.
-- Waveshare I/O modules: waveshare_io.yamlt.
-- Wayjun pulse counter modules: pulse_count.yamlt.
+- Eastron SDM 2x0 power meters: eastron_XXX.yamlt.
+- Generic Aliexpress temperature/humidity sensors, e.g. ComWinTop: temp_humid_XXX.yamlt.
+- Generic pressure-based water level sensors, e.g. Seeed Studio, QuiDian: water_level_XXX.yamlt.
+- Waveshare I/O modules: waveshare_io_XXX.yamlt.
+- Wayjun pulse counter modules: pulse_count_XXX.yamlt.
 
 There are two subtypes, the `XXX_mqtt.yamlt` files are YAML templates for
-MQMGateway, the `XXX_ha.yamlt` files are YAML templates for Home Assistant.
+MQMGateway, the `XXX_ha.yamlt` files are YAML templates for Home Assistant and
+`XXX_ha.json` are the corresponding JSON files for Home Assistant dashboards.
 All contributions for further devices are welcome.
 
 # Usage
@@ -44,10 +47,10 @@ templates are used in building the config file and what goes into them.  The
 control section starts at the comment `# Edit the following section`.  There
 are two commands in there, `compile_header` and `compile_template`.
 
-`compile_header` takes `config_header.yamlt` and generates the start of the
-`config.yaml` file.  Specifically, it takes a list of DNS names and inserts
-the corresponding IP addresses into the config file.  A typical
-`compile_header` command would be:
+`compile_header` takes `config_header_XXX.yaml` and generates the start of the
+YAML config file.  Specifically, it takes a list of DNS names and inserts the
+corresponding IP addresses into the config file.  A typical `compile_header`
+command would be:
 
 ```
 compile_header outdoors.modbus.lan indoors.modbus.lan basement.modbus.lan
@@ -57,8 +60,9 @@ This inserts the IP addresses for `outdoors.modbus.lan` and the other two DNS
 names into the config file.
 
 `compile_template` takes the given template file, inserts the given MQTT
-topic, network, and Modbus address, and adds it to the `config.yaml` file.  A
-typical `compile_template` command would be:
+topic, network, and Modbus address (for MQMGatway) or MQTT topic and sensor
+name (for Home Assistant) and adds it to the MQMGatway or Home Assistant
+config file.  A typical `compile_template` command would be:
 
 ```
 compile_template temp_humid front_door outdoors 10
@@ -71,9 +75,9 @@ sets the Home Assistant sensor names to `front_door_XXX`, and adds it to
 `homeassistant.yaml`.
 
 The advantage of using templates is that you can very easily set up entire
-Modbus device networks with only a few lines of config.  For example if you
-have three outdoors temperature/humidity sensors you can create the config
-file with:
+Modbus device networks for both MQMGatway and Home Assistant with only a few
+lines of config.  For example if you have three outdoors temperature/humidity
+sensors you can create the config file with:
 
 ```
 compile_template temp_humid front_door outdoors 10
@@ -92,12 +96,16 @@ most explanation.
 # Template files
 
 A template file is a standard YAML config as used by MQMGateway and Home
-Assistant, with three special placeholders (HA templates only use the first
-one):
+Assistant.  There are three special placeholders for MQMGateway templates:
 
 - XXXX in the template is replaced with the MQTT topic name.
 - YYYY in the template is replaced with the Modbus network name.
 - ZZZZ in the template is replaced with the Modbus device address.
+
+There are two special placeholders for Home Assistant templates:
+
+- XXXX in the template is replaced with the MQTT topic name.
+- YYYY in the template is replaced with the sensor group name.
 
 To see an example, look at any of the `.yamlt` template files.  The
 `XXX_mqtt.yamlt` files are for MQMGateway, the `XXX_ha.yamlt` files are for
