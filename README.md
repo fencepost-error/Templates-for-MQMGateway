@@ -29,9 +29,13 @@ MQMGateway.
 
 YAML templates for the following devices are currently provided:
 
+- CDEbyte digital/analog I/O devices: cdebyte_io_XXX.yamlt. 
 - Eastron SDM 2x0 power meters: eastron_XXX.yamlt.
-- Generic Aliexpress temperature/humidity sensors, e.g. ComWinTop: temp_humid_XXX.yamlt.
+- Generic CO2 sensors, e.g. ComWinTop: co2_XXX.yamlt.
+- Generic PM2.5/PM10 sensors, e.g. ComWinTop: pm25_XXX.yamlt.
 - Generic pressure-based water level sensors, e.g. Seeed Studio, QuiDian: water_level_XXX.yamlt.
+- Generic temperature/humidity sensors, e.g. ComWinTop: temp_humid_XXX.yamlt.
+- MIA HVAC systems: mia_XXX.yamlt.
 - Waveshare I/O modules: waveshare_io_XXX.yamlt.
 - Wayjun pulse counter modules: pulse_count_XXX.yamlt.
 
@@ -48,16 +52,15 @@ control section starts at the comment `# Edit the following section`.  There
 are two commands in there, `compile_header` and `compile_template`.
 
 `compile_header` takes `config_header_XXX.yaml` and generates the start of the
-YAML config file.  Specifically, it takes a list of DNS names and inserts the
-corresponding IP addresses into the config file.  A typical `compile_header`
-command would be:
+YAML config file.  Specifically, it takes a list of DNS names in
+`config_header_mqtt.yaml` inserts the corresponding IP addresses into the
+config file.  The `compile_header` directive takes no arguments and just tells
+the script compiler to generate the required headers that begin each YAML
+config file:
 
 ```
-compile_header outdoors.modbus.lan indoors.modbus.lan basement.modbus.lan
+compile_header 
 ```
-
-This inserts the IP addresses for `outdoors.modbus.lan` and the other two DNS
-names into the config file.
 
 `compile_template` takes the given template file, inserts the given MQTT
 topic, network, and Modbus address (for MQMGatway) or MQTT topic and sensor
@@ -85,9 +88,9 @@ compile_template temp_humid back_door outdoors 11
 compile_template temp_humid shed outdoors 12
 ```
 
-Finally, mkconfig will apply the new configuration to modmqqtd.  If you don't
-want to apply the new configuration but only generate the config file, run in
-debug mode with `-d`.
+If run with the `-i` install argument `mkconfig` will apply the new
+configuration to modmqttd once it's generated.  To only generate the HA config
+files, use `-h`.  To only generate the MQMGateway files, use `-m`.
 
 Suggestions for updates to the documentation to cover unclear portions are
 welcome, having worked with the code it's not always clear which bits need the
