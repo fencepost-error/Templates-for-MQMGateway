@@ -10,12 +10,12 @@ modmqttd:
 
 modbus:
   networks:
-    - name: annex
-      address: waveshare.annex.lan
+    - name: indoors
+      address: waveshare.indoors.lan
       port: 502
 
-    - name: attic
-      address: waveshare.attic.lan
+    - name: outdoors
+      address: waveshare.outdoors.lan
       port: 502
       # The following is a workaround for bugs in devices that require an
       # entire group of coils/registers to be read at once.  Since this is
@@ -34,12 +34,8 @@ modbus:
               register_type: coil
               count: 32
 
-    - name: network
-      address: waveshare.network.lan
-      port: 502
-
-    - name: switchboard
-      address: cdebyte.switchboard.lan
+    - name: basement
+      address: waveshare.basement.lan
       port: 502
 
 # This should only be enabled if the test device is present, otherwise
