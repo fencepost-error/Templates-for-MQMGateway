@@ -1,0 +1,45 @@
+# Template for for MIA HVAC systems.  On the one hand the device is
+# controllable via modbus and the manufacturers are nice enough to send you
+# technical details on request.  On the other hand what it's running isn't
+# so much a modbus implementation as a modbus emulator that recognises
+# certain fixed byte sequences corresponding to modbus commands and returns
+# a modbus-formatted message in response.  In particular you have to read
+# all 13 holding registers starting at reg 1 at once, and all 32 coils at
+# once.  For the registers you get back data roughly starting at register 1
+# no matter what you ask for, and for the coils you get back data for 32
+# coils no matter what you ask for, leading to invalid-length errors if you
+# ask for fewer than 4 bytes worth of data.  In addition the coil bits don't
+# necessarily track the operating state, so we use the only reliable bit
+# present as an on/off indicator rather than trying to report individual
+# coil states.
+#
+# Replace XXXX with topic name, YYYY with network, ZZZZ with device ID
+
+    - topic: XXXX/cabinet_temperature
+      network: YYYY
+      slave: ZZZZ
+      state:
+        converter: std.divide(10,1)
+        register: 2
+        register_type: holding
+    - topic: XXXX/cabinet_humidity
+      network: YYYY
+      slave: ZZZZ
+      state:
+        converter: std.divide(10,1)
+        register: 5
+        register_type: holding
+    - topic: XXXX/target_humidity
+      network: YYYY
+      slave: ZZZZ
+      state:
+        converter: std.divide(10,1)
+        register: 6
+        register_type: holding
+
+    - topic: XXXX/device_on
+      network: YYYY
+      slave: ZZZZ
+      state:
+        register: 24
+        register_type: coil

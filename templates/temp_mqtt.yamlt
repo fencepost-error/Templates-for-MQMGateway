@@ -1,0 +1,22 @@
+# Template for for generic Aliexpress temperature-only sensors, e.g.
+# ComWinTop, Gauselink, etc.  These also report a humidity at
+# register 1 as for the temp+humidity sensors but it's not clear where
+# this reading is coming from since the sensor is in a sealed SS probe.
+#
+# Replace XXXX with topic name, YYYY with network, ZZZZ with device ID
+
+    - topic: XXXX/temperature
+      network: YYYY
+      slave: ZZZZ
+      state:
+        converter: std.divide(10,1)
+        register: 2
+        register_type: input
+    - topic: XXXX/temperature_calibration
+      network: YYYY
+      slave: ZZZZ
+      state:
+        converter: std.divide(10,1)
+        register: 82
+        register_type: input
+        refresh: 60min

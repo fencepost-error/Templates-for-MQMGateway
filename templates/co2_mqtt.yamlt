@@ -1,0 +1,48 @@
+# Template for for generic Aliexpress temperature/humidity sensors, e.g.
+# ComWinTop.
+#
+# Replace XXXX with topic name, YYYY with network, ZZZZ with device ID
+
+    - topic: XXXX/humidity
+      network: YYYY
+      slave: ZZZZ
+      state:
+        converter: std.divide(10,1)
+        register: 1
+        register_type: input
+    - topic: XXXX/temperature
+      network: YYYY
+      slave: ZZZZ
+      state:
+        converter: std.divide(10,1)
+        register: 2
+        register_type: input
+    - topic: XXXX/co2
+      network: YYYY
+      slave: ZZZZ
+      state:
+        register: 3
+        register_type: input
+    - topic: XXXX/temperature_calibration
+      network: YYYY
+      slave: ZZZZ
+      state:
+        converter: std.divide(10,1)
+        register: 52
+        register_type: input
+        refresh: 60min
+    - topic: XXXX/humidity_calibration
+      network: YYYY
+      slave: ZZZZ
+      state:
+        converter: std.divide(10,1)
+        register: 57
+        register_type: input
+        refresh: 60min
+    - topic: XXXX/co2_calibration
+      network: YYYY
+      slave: ZZZZ
+      state:
+        register: 62
+        register_type: input
+        refresh: 60min

@@ -1,0 +1,35 @@
+    - name: XXXX_temperature
+      friendly_name: "Temperature"
+      unique_id: uniqueid__XXXX_temperature
+      icon: mdi:thermometer
+      state_topic: "XXXX/temperature/state"
+      value_template: "{{ value | round(1) }}"
+      availability_topic: "XXXX/temperature/availability"
+      payload_available: "1"
+      payload_not_available: "0"
+      unit_of_measurement: "°C"
+      device_class: temperature
+
+    - name: XXXX_humidity
+      friendly_name: "Humidity"
+      unique_id: uniqueid__XXXX_humidity
+      icon: mdi:water-percent
+      state_topic: "XXXX/humidity/state"
+      value_template: "{{ value | round(1) }}"
+      availability_topic: "XXXX/humidity/availability"
+      payload_available: "1"
+      payload_not_available: "0"
+      unit_of_measurement: "%"
+      device_class: humidity
+
+    - name: XXXX_co2
+      friendly_name: "CO2"
+      unique_id: uniqueid__XXXX_co2
+      icon: mdi:molecule-co2
+      state_topic: "XXXX/co2/state"
+      value_template: "{{ value | round(1) }}"
+      availability_topic: "XXXX/co2/availability"
+      payload_available: "1"
+      payload_not_available: "0"
+      unit_of_measurement: "ppm"
+      device_class: carbon_dioxide

@@ -1,0 +1,15 @@
+    - name: XXXX_level
+      friendly_name: "Water Tank"
+      unique_id: uniqueid__XXXX_level
+      icon: mdi:cup-water
+      state_topic: "XXXX/level/state"
+      # The following requires custom editing to deal with water depth ->
+      # volume conversion, the value below is for a depth of 1.88m in a
+      # 2000L tank.  Note the odd parentheses, the expression evaluator
+      # has broken operator precedence handling.
+      value_template: "{{ ( value | float * 10.62 ) | round(1) }}"
+      availability_topic: "XXXX/level/availability"
+      payload_available: "1"
+      payload_not_available: "0"
+      unit_of_measurement: "L"
+      device_class: volume_storage

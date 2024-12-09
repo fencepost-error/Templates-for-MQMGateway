@@ -1,0 +1,11 @@
+    - name: XXXX_temperature
+      friendly_name: "Temperature"
+      unique_id: uniqueid__XXXX_temperature
+      icon: mdi:thermometer
+      state_topic: "XXXX/temperature/state"
+      value_template: "{{ value | round(1) }}"
+      availability_topic: "XXXX/temperature/availability"
+      payload_available: "1"
+      payload_not_available: "0"
+      unit_of_measurement: "°C"
+      device_class: temperature

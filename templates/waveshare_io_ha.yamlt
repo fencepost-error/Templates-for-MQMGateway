@@ -1,0 +1,39 @@
+# This is really an array of binary sensors but there's no direct way to
+# handle this, for now we just report the first I/O channel as a standard
+# sensor.  See
+# https://community.home-assistant.io/t/customize-binary-sensor-open-closed-icons/242658/12
+# for the icon magic, however this is only possible in templates which
+# requires creating two sensors for each one that we actually want.  There's
+# a request open to add custom device classes:
+#
+# https://community.home-assistant.io/t/custom-device-classes/368238
+#
+# which would solve the problem, but no sign it'll ever be added.
+#
+#mqtt:
+#  - binary_sensor:
+#      name: "Input 0"
+#      unique_id: uniqueid__XXXX_output0
+#      state_topic: "XXXX/inputs/state"
+#      payload_on: "ON"
+#      availability:
+#        - topic: "XXXX/inputs/availability"
+#          payload_available: 1
+#          payload_not_available: 0
+#      icon_template: >
+#        mdi:electric-switch{{'-closed' if is_state('binary_sensor.XXXX_output0','on')}}
+#      value_template: "{{ value_json[0] }}"
+
+    - name: XXXX_inputs
+      friendly_name: "Inputs"
+      unique_id: uniqueid__XXXX_inputs
+      icon: mdi:import
+      state_topic: "XXXX/inputs/state"
+      value_template: "{{ value_json[0] }}"
+
+    - name: XXXX_outputs
+      friendly_name: "Outputs"
+      unique_id: uniqueid__XXXX_outputs
+      icon: mdi:export
+      state_topic: "XXXX/outputs/state"
+      value_template: "{{ value_json[0] }}"

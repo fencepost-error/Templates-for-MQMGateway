@@ -1,0 +1,131 @@
+    - name: XXXX_voltage
+      friendly_name: "Voltage"
+      unique_id: uniqueid__XXXX_voltage
+      icon: mdi:sine-wave
+      state_topic: "XXXX/voltage/state"
+      value_template: "{{ value | round(1) }}"
+      unit_of_measurement: "V"
+      device_class: voltage
+
+    - name: XXXX_current
+      friendly_name: "Current"
+      unique_id: uniqueid__XXXX_current
+      icon: mdi:current-ac
+      state_topic: "XXXX/current/state"
+      value_template: "{{ value | round(1) }}"
+      unit_of_measurement: "A"
+      device_class: current
+
+    - name: XXXX_active_power
+      friendly_name: "Active power"
+      unique_id: uniqueid__XXXX_active_power
+      icon: mdi:flash-triangle-outline
+      state_topic: "XXXX/active_power/state"
+      value_template: "{{ value | round(1) }}"
+      unit_of_measurement: "W"
+      device_class: power
+
+    - name: XXXX_reactive_power
+      friendly_name: "Reactive power"
+      unique_id: uniqueid__XXXX_reactive_power
+      icon: mdi:flash-triangle-outline
+      state_topic: "XXXX/reactive_power/state"
+      value_template: "{{ value | round(1) }}"
+      unit_of_measurement: "VAr"
+      device_class: reactive_power
+
+    - name: XXXX_apparent_power
+      friendly_name: "Apparent power"
+      unique_id: uniqueid__XXXX_apparent_power
+      icon: mdi:flash-triangle-outline
+      state_topic: "XXXX/apparent_power/state"
+      value_template: "{{ value | round(1) }}"
+      unit_of_measurement: "VA"
+      device_class: apparent_power
+
+    - name: XXXX_frequency
+      friendly_name: "Frequency"
+      unique_id: uniqueid__XXXX_frequency
+      icon: mdi:waveform
+      state_topic: "XXXX/frequency/state"
+      value_template: "{{ value | round(1) }}"
+      unit_of_measurement: "Hz"
+      device_class: frequency
+
+    - name: XXXX_import_energy
+      friendly_name: "Import energy"
+      unique_id: uniqueid__XXXX_import_energy
+      icon: mdi:flash-triangle-outline
+      state_topic: "XXXX/import_energy/state"
+      value_template: "{{ value | round(1) }}"
+      unit_of_measurement: "kWh"
+      device_class: energy
+      state_class: total
+
+    - name: XXXX_export_energy
+      friendly_name: "Export energy"
+      unique_id: uniqueid__XXXX_export_energy
+      icon: mdi:flash-triangle-outline
+      state_topic: "XXXX/export_energy/state"
+      value_template: "{{ value | round(1) }}"
+      unit_of_measurement: "kWh"
+      device_class: energy
+      state_class: total
+
+    - name: XXXX_total_demand
+      friendly_name: "Total demand"
+      unique_id: uniqueid__XXXX_total_demand
+      icon: mdi:flash-triangle-outline
+      state_topic: "XXXX/total_demand/state"
+      value_template: "{{ value | round(1) }}"
+      unit_of_measurement: "W"
+      device_class: energy
+      state_class: total
+
+    - name: XXXX_positive_demand
+      friendly_name: "Positive demand"
+      unique_id: uniqueid__XXXX_positive_demand
+      icon: mdi:flash-triangle-outline
+      state_topic: "XXXX/positive_demand/state"
+      value_template: "{{ value | round(1) }}"
+      unit_of_measurement: "W"
+      device_class: energy
+      state_class: total
+
+    - name: XXXX_reverse_demand
+      friendly_name: "Reverse demand"
+      unique_id: uniqueid__XXXX_reverse_demand
+      icon: mdi:flash-triangle-outline
+      state_topic: "XXXX/reverse_demand/state"
+      value_template: "{{ value | round(1) }}"
+      unit_of_measurement: "W"
+      device_class: energy
+      state_class: total
+
+    - name: XXXX_current_demand
+      friendly_name: "Current demand"
+      unique_id: uniqueid__XXXX_current_demand
+      icon: mdi:current-ac
+      state_topic: "XXXX/current_demand/state"
+      value_template: "{{ value | round(1) }}"
+      unit_of_measurement: "A"
+      device_class: current
+
+    - name: XXXX_max_current_demand
+      friendly_name: "Max current demand"
+      unique_id: uniqueid__XXXX_max_current_demand
+      icon: mdi:current-ac
+      state_topic: "XXXX/max_current_demand/state"
+      value_template: "{{ value | round(1) }}"
+      unit_of_measurement: "A"
+      device_class: current
+
+    - name: XXXX_total_energy
+      friendly_name: "Total energy"
+      unique_id: uniqueid__XXXX_total_energy
+      icon: mdi:flash-triangle-outline
+      state_topic: "XXXX/total_energy/state"
+      value_template: "{{ value | round(1) }}"
+      unit_of_measurement: "kWh"
+      device_class: energy
+      state_class: total

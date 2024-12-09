@@ -1,0 +1,29 @@
+    # HA forces all strings to lowercase so the following is actually
+    # "count_channelA" but presented in the form that HA mangles it into.
+    - name: XXXX_count_channela
+      friendly_name: "Water"
+      unique_id: uniqueid__XXXX_count_channela
+      icon: mdi:thermometer
+      state_topic: "XXXX/count_chA/state"
+      value_template: "{{ value | round(1) }}"
+      availability_topic: "XXXX/count_chA/availability"
+      payload_available: "1"
+      payload_not_available: "0"
+      unit_of_measurement: "L"
+      device_class: water
+      state_class: total
+
+    # HA forces all strings to lowercase so the following is actually
+    # "count_channelA" but presented in the form that HA mangles it into.
+    - name: XXXX_count_channelb
+      friendly_name: "Count Channel 2"
+      unique_id: uniqueid__XXXX_count_channelb
+      icon: mdi:thermometer
+      state_topic: "XXXX/count_chB/state"
+      value_template: "{{ value | round(1) }}"
+      availability_topic: "XXXX/count_chB/availability"
+      payload_available: "1"
+      payload_not_available: "0"
+      unit_of_measurement: "L"
+      device_class: water
+      state_class: total

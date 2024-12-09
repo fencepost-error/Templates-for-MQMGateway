@@ -1,0 +1,77 @@
+# Template for for generic Aliexpress PM2.5/PM10 sensors, e.g. ComWinTop.
+# There are several variants of this, all have temperature + humidity, and
+# then various additions to the PM2.5/PM10 sensor in the register range
+# 502-508.  This one has a sound level meter before the PM2.5/PM10 sensor.
+#
+# Replace XXXX with topic name, YYYY with network, ZZZZ with device ID
+
+    - topic: XXXX/humidity
+      network: YYYY
+      slave: ZZZZ
+      state:
+        converter: std.divide(10,1)
+        register: 501
+        register_type: input
+    - topic: XXXX/temperature
+      network: YYYY
+      slave: ZZZZ
+      state:
+        converter: std.divide(10,1)
+        register: 502
+        register_type: input
+    - topic: XXXX/noise
+      network: YYYY
+      slave: ZZZZ
+      state:
+        converter: std.divide(10,1)
+        register: 503
+        register_type: input
+    - topic: XXXX/pm2_5
+      network: YYYY
+      slave: ZZZZ
+      state:
+        register: 504
+        register_type: input
+    - topic: XXXX/pm10
+      network: YYYY
+      slave: ZZZZ
+      state:
+        register: 505
+        register_type: input
+    - topic: XXXX/temperature_calibration
+      network: YYYY
+      slave: ZZZZ
+      state:
+        converter: std.divide(10,1)
+        register: 81
+        register_type: input
+        refresh: 60min
+    - topic: XXXX/humidity_calibration
+      network: YYYY
+      slave: ZZZZ
+      state:
+        converter: std.divide(10,1)
+        register: 82
+        register_type: input
+        refresh: 60min
+    - topic: XXXX/noise_calibration
+      network: YYYY
+      slave: ZZZZ
+      state:
+        register: 83
+        register_type: input
+        refresh: 60min
+    - topic: XXXX/pm2_5_calibration
+      network: YYYY
+      slave: ZZZZ
+      state:
+        register: 84
+        register_type: input
+        refresh: 60min
+    - topic: XXXX/pm10_calibration
+      network: YYYY
+      slave: ZZZZ
+      state:
+        register: 85
+        register_type: input
+        refresh: 60min

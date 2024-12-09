@@ -1,0 +1,65 @@
+    - name: XXXX_cabinet_temperature
+      friendly_name: "Cabinet Temperature"
+      unique_id: uniqueid__XXXX_cabinet_temperature
+      icon: mdi:thermometer
+      state_topic: "XXXX/cabinet_temperature/state"
+      value_template: "{{ value | round(1) }}"
+      availability_topic: "XXXX/cabinet_temperature/availability"
+      payload_available: "1"
+      payload_not_available: "0"
+      unit_of_measurement: "°C"
+      device_class: temperature
+
+    - name: XXXX_cabinet_humidity
+      friendly_name: "Cabinet Humidity"
+      unique_id: uniqueid__XXXX_cabinet_humidity
+      icon: mdi:water-percent
+      state_topic: "XXXX/cabinet_humidity/state"
+      value_template: "{{ value | round(1) }}"
+      availability_topic: "XXXX/cabinet_humidity/availability"
+      payload_available: "1"
+      payload_not_available: "0"
+      unit_of_measurement: "%"
+      device_class: humidity
+
+    - name: XXXX_target_humidity
+      friendly_name: "Target Humidity"
+      unique_id: uniqueid__XXXX_target_humidity
+      icon: mdi:water-percent
+      state_topic: "XXXX/target_humidity/state"
+      value_template: "{{ value | round(1) }}"
+      availability_topic: "XXXX/target_humidity/availability"
+      payload_available: "1"
+      payload_not_available: "0"
+      unit_of_measurement: "%"
+      device_class: humidity
+
+    # This is a binary sensor which will require manually editing three
+    # separate locations in the config files:
+    #
+    # home_assistant.yaml to move it to the correct location at the end
+    # of the list of standard sensors:
+    # mqtt:
+    #  sensor:
+    #    <existing sensors>
+    #  binary_sensor:
+    #    <binary sensor>
+    #
+    # home_assistant.yaml in the:
+    # homeassistant:
+    #   customize:
+    # section at the end which assigns labels to the sensors.
+    #
+    # dashboard.yaml file to change the type from "sensor" to
+    # "binary_sensor".
+  binary_sensor:
+    - name: XXXX_device_on
+      friendly_name: "Device On"
+      unique_id: uniqueid__XXXX_device_on
+      state_topic: "XXXX/device_on/state"
+      availability_topic: "XXXX/device_on/availability"
+      payload_available: "1"
+      payload_not_available: "0"
+      payload_on: "1"
+      payload_off: "0"
+      device_class: running
