@@ -2,35 +2,50 @@
 # Build MQMGateway and Home Assistant config files from template files and
 # apply it to modmqttd.  Arguments:
 #
-#	-d = debug mode, generate the config file without applying it.
+#	-h = Only generate HA config, not MQTT config.
+#	-i = Install MQTT config in MQMGateway.
 #	-m = Only generate MQTT config, not HA config.
-#	-v = verbose mode, show each template generation.
+#	-v = Verbose mode, show each template generation.
 #
 # To control what goes into the config file, scroll down to the section
 # with the comment '# Edit the following'.
+#
+# If you're not generating your YAML with sed you're just not trying.
 
 CONFIG_FILE_DIRECTORY=""
 HEADER_FILE_MQTT="config_header_mqtt.yaml"
 HEADER_FILE_HA="config_header_ha.yaml"
+HEADER_FILE_DASHBOARD="config_header_dashboard.yaml"
+HEADER_FILE_TEMP="config_header_temp.yaml"
 OUTPUT_FILE_MQTT="config.yaml"
 OUTPUT_FILE_HA="home_assistant.yaml"
-OUTPUT_FILE_HA_JSON="home_assistant.json"
-DEBUG=0
-MQTT_ONLY=0
+OUTPUT_FILE_DASHBOARD="dashboard.yaml"
+TEMP_FILE=_mkconfig.tmp
+DO_INSTALL=0
+DO_MQTT=0
+DO_HA=0
 VERBOSE=0
 
 # Process any optional flags before the args.
 
-while getopts "dmv" options ; do
+while getopts "himv" options ; do
 	case "${options}" in
-		d) DEBUG=1 ;;
-		m) MQTT_ONLY=1 ;;
+		h) DO_HA=1 ;;
+		i) DO_INSTALL=1 ;;
+		m) DO_MQTT=1 ;;
 		v) VERBOSE=1 ;;
 		*) echo "Invalid option -${OPTARG}" >&2 ;
 		   exit 1 ;;
 	esac
 done
 shift $(( OPTIND - 1 ))
+
+# No explicit selection of MQTT or HA means apply all options.
+
+if [ $DO_MQTT -eq 0 ] && [ $DO_HA -eq 0 ] ; then
+	DO_MQTT=1 ;
+	DO_HA=1 ;
+fi
 
 # Check whether the config files are in a subdirectory.
 
@@ -54,7 +69,28 @@ for file in "${CONFIG_FILE_DIRECTORY}"*.yamlt ; do
 		echo "Template $file contains tab characters, should be spaces" >&2 ;
 		exit 1 ;
 	fi
+	if [ "$(grep -c '^\s*binary_sensor:' $file)" -gt 0 ] ; then
+		echo "Warning: $file contains binary_sensor: definitions" >&2 ;
+		echo "         alongside standard sensors, this will require manual editing of" >&2 ;
+		echo "         $OUTPUT_FILE_HA to move them into the binary_sensor: category and" >&2 ;
+		echo "         $OUTPUT_FILE_DASHBOARD to change the type from sensor to binary_sensor." >&2 ;
+	fi
 done
+
+# Clean up files from previous runs.
+
+if [ -f ${OUTPUT_FILE_MQTT} ] ; then
+	rm ${OUTPUT_FILE_MQTT} ;
+fi
+if [ -f ${OUTPUT_FILE_HA} ] ; then
+	rm ${OUTPUT_FILE_HA} ;
+fi
+if [ -f ${OUTPUT_FILE_DASHBOARD} ] ; then
+	rm ${OUTPUT_FILE_DASHBOARD} ;
+fi
+if [ -f ${TEMP_FILE} ] ; then
+	rm ${TEMP_FILE} ;
+fi
 
 # Create the header.  This performs DNS lookups on the named devices and
 # inserts the corresponding IP addresses into the header for the config
@@ -62,7 +98,7 @@ done
 
 compile_header()
 	{
-	for DNSNAME in "$@" ; do
+	for DNSNAME in $(grep "address: [a-z]" ${CONFIG_FILE_DIRECTORY}${HEADER_FILE_MQTT} | sed "s/^[ ]*address: //") ; do
 
 		# Get the IP address of the device.  This isn't very fancy, it just
 		# returns the first one found without much checking on the assumption
@@ -96,36 +132,45 @@ add_build_info()
 	echo "    # Sensor group '${NAME}' added from '${TEMPLATE_FILE}' template" >> "${OUTPUT_FILE}"
 	}
 
-# Create an output file from a template file.  This just strips comments
-# and inserts the topic, network name, and address at the appropriate
-# locations.
+# Create the various YAML files and configs needed by Home Assistant.
 
 compile_template_ha()
 	{
 	TEMPLATE_FILE=$1
 	TOPIC=$2
 	NAME=$3
+	TEMP_FILE_HA="_ha_temp.yaml"
 
 	if [ $VERBOSE -eq 1 ] ; then
-		echo "Creating sensor group ${TOPIC} from ${CONFIG_FILE_DIRECTORY}${TEMPLATE_FILE}_ha.yamlt" ;
+		echo "Creating sensor group ${TOPIC} and dasboard card ${NAME} from ${CONFIG_FILE_DIRECTORY}${TEMPLATE_FILE}_ha.yamlt" ;
 	fi
 
 	if [ ! -f "${CONFIG_FILE_DIRECTORY}${TEMPLATE_FILE}_ha".yamlt ] ; then
 		echo "Template ${CONFIG_FILE_DIRECTORY}${TEMPLATE_FILE}_ha.yamlt not found" >&2 ;
 		exit 1 ;
 	fi
-#	if [ ! -f "${CONFIG_FILE_DIRECTORY}${TEMPLATE_FILE}_ha".jsont ] ; then
-#		echo "Template ${CONFIG_FILE_DIRECTORY}${TEMPLATE_FILE}_ha.jsont not found" >&2 ;
-#		exit 1 ;
-#	fi
 
+	# Generate the sensor config file for HA.
 	add_build_info "$NAME" "${TEMPLATE_FILE}" "${OUTPUT_FILE_HA}"
-	cat "${CONFIG_FILE_DIRECTORY}${TEMPLATE_FILE}"_ha.yamlt | sed '/^#/d' | sed s/XXXX/"${TOPIC}"/g >> "${OUTPUT_FILE_HA}"
+	grep -v "friendly_name:" "${CONFIG_FILE_DIRECTORY}${TEMPLATE_FILE}"_ha.yamlt | sed '/^#/d' | sed s/XXXX/"${TOPIC}"/g | sed s/YYYY/"${NAME}"/g > "${TEMP_FILE_HA}"
+	cat "${TEMP_FILE_HA}" >> "${OUTPUT_FILE_HA}"
 
-#	cat "${CONFIG_FILE_DIRECTORY}${TEMPLATE_FILE}"_ha.jsont | sed '/^#/d' | sed s/YYYY/"${NAME}"/g >> "${OUTPUT_FILE_HA_JSON}"
+	# Generate the additional sensor friendly-name section needed for the
+	# sensor config file.
+	echo "" >> "${TEMP_FILE}"
+	cat "${CONFIG_FILE_DIRECTORY}${TEMPLATE_FILE}"_ha.yamlt | sed '/^#/d' | sed s/XXXX/"${TOPIC}"/g | sed -E s/"^(.*- name:) (.*)$"/"    sensor.\2:"/g | grep --no-group-separator "sensor\." -A 1 >> "${TEMP_FILE}"
+
+	# Generate the dashboard config file for HA.
+	printf "\n      - type: entities\n        title: %s\n        entities:\n" "$NAME" >> "${OUTPUT_FILE_DASHBOARD}"
+	grep "name:" "${TEMP_FILE_HA}" | sed '/^#/d' | sed s/"    - name: "/"          - entity: sensor."/g >> "${OUTPUT_FILE_DASHBOARD}"
+
+	# Clean up
+	rm "${TEMP_FILE_HA}"
 	}
 
-compile_template()
+# Create the YAML file needed by MQMGateway.
+
+compile_template_mqtt()
 	{
 	TEMPLATE_FILE=$1
 	TOPIC=$2
@@ -144,39 +189,56 @@ compile_template()
 
 	add_build_info "$NAME" "${TEMPLATE_FILE}" "${OUTPUT_FILE_MQTT}"
 	cat "${CONFIG_FILE_DIRECTORY}${TEMPLATE_FILE}"_mqtt.yamlt | sed '/^#/d' | sed s/XXXX/"${TOPIC}"/g | sed s/YYYY/"${NETWORK}"/g | sed s/ZZZZ/"${ADDRESS}"/g >> "${OUTPUT_FILE_MQTT}"
+	}
 
-	if [ $MQTT_ONLY -ne 1 ] ; then
-		compile_template_ha "$TEMPLATE_FILE" "$TOPIC" "$NAME";
+compile_template()
+	{
+	TEMPLATE_FILE=$1
+	TOPIC=$2
+	NAME=$3
+	NETWORK=$4
+	ADDRESS=$5
+
+	if echo "${TOPIC}" | grep -q "[A-Z]" ; then
+		echo "Topic '${TOPIC}' must be given as lowercase only for HA use" >&2 ;
+		exit 1 ;
+	fi
+
+	if [ $DO_MQTT -eq 1 ] ; then
+		compile_template_mqtt "$TEMPLATE_FILE" "$TOPIC" "$NAME" "$NETWORK" "$ADDRESS" ;
+	fi
+
+	if [ $DO_HA -eq 1 ] ; then
+		compile_template_ha "$TEMPLATE_FILE" "$TOPIC" "$NAME" ;
 	fi
 	}
 
-# "Compile" the input files into the config files.  The argument order
-# for is 'template_file topic_name friendly_name network address'.
+# Create the headers for the config files.
 
-if [ -f ${OUTPUT_FILE_MQTT} ] ; then
-	rm ${OUTPUT_FILE_MQTT} ;
-fi
-if [ -f ${OUTPUT_FILE_HA} ] ; then
-	rm ${OUTPUT_FILE_HA} ;
-fi
-
-echo "# This file has been auto-generated by mkconfig.sh." > "${OUTPUT_FILE_MQTT}"
-echo "# Any changes will be overwritten on the next rebuild." >> "${OUTPUT_FILE_MQTT}"
-echo "" >> "${OUTPUT_FILE_MQTT}"
-cat ${CONFIG_FILE_DIRECTORY}${HEADER_FILE_MQTT} >> ${OUTPUT_FILE_MQTT}
-
-echo "# This file has been auto-generated by mkconfig.sh." > "${OUTPUT_FILE_HA}"
-echo "# Any changes will be overwritten on the next rebuild." >> "${OUTPUT_FILE_HA}"
-echo "" >> "${OUTPUT_FILE_HA}"
+cp ${CONFIG_FILE_DIRECTORY}${HEADER_FILE_MQTT} ${OUTPUT_FILE_MQTT}
 cp ${CONFIG_FILE_DIRECTORY}${HEADER_FILE_HA} ${OUTPUT_FILE_HA}
+cp ${CONFIG_FILE_DIRECTORY}${HEADER_FILE_DASHBOARD} "${OUTPUT_FILE_DASHBOARD}"
+cp ${CONFIG_FILE_DIRECTORY}${HEADER_FILE_TEMP} "${TEMP_FILE}"
 
-touch "${OUTPUT_FILE_HA_JSON}"
+# "Compile" the input files into the config files.  compile_header arguments
+# are the FQDN names of each device.  compile_template arguments are, with
+# examples:
+#
+#	Template file	MQTT topic	HA friendly name	Network		Modbus address
+#	temp_humid		annex		"Annex"				annex		10
+#
+# The 'Network' value is the network name given in config_header_mqtt.yaml,
+# which is mapped to an IP address by the config script for use by MQMGateway.
+#
+# Note that the topic_name must be all lowercase since HA mangles identifiers
+# into lowercase, leading to mismatches if any of the config files refer
+# to them in non-lowercase terms.
 
 #########################################################################
-# Edit the following section to control what goes into the config file.
+# Edit the following section to control what goes into the config files.
 #########################################################################
 
-compile_header outdoors.modbus.lan indoors.modbus.lan basement.modbus.lan
+compile_header
 
 compile_template eastron grid indoors 10
 compile_template eastron non_backup indoors 11
@@ -193,6 +255,8 @@ compile_template temp_humid basement basement 10
 compile_template temp_humid front_door outdoors 10
 compile_template temp_humid back_door outdoors 11
 compile_template temp_humid shed outdoors 12
+compile_template co2 co2 outdoors 13
+compile_template pm25 pm25 outdoors 14
 
 compile_template water_level water_tank outdoors 20
 
@@ -200,14 +264,22 @@ compile_template water_level water_tank outdoors 20
 # End of user-defined configuration settings
 #########################################################################
 
-# If we're running in debug mode only, don't apply the changes
+echo "" >> "${OUTPUT_FILE_HA}"
+cat "${TEMP_FILE}" >> "${OUTPUT_FILE_HA}"
+rm "${TEMP_FILE}"
 
-if [ $DEBUG -eq 1 ] ; then
+# If we're not installing the config in MQMGateway, we're done
+
+if [ $DO_INSTALL -ne 1 ] ; then
 	exit 0 ;
 fi
 
 # Install the new config file and restart modmqttd.  We need to pause
 # for a second after the restart to allow modmqttd time to initialise.
+
+if [ $VERBOSE -eq 1 ] ; then
+	echo "Installing MQTT configuration in MQMGateway" ;
+fi
 
 sudo cp config.yaml /etc/modmqttd/config.yaml
 sudo systemctl restart modmqttd
