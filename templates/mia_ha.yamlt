@@ -7,7 +7,7 @@
       availability_topic: "XXXX/cabinet_temperature/availability"
       payload_available: "1"
       payload_not_available: "0"
-      unit_of_measurement: "°C"
+      unit_of_measurement: "Â°C"
       device_class: temperature
 
     - name: XXXX_cabinet_humidity
@@ -48,10 +48,12 @@
     # home_assistant.yaml in the:
     # homeassistant:
     #   customize:
-    # section at the end which assigns labels to the sensors.
-    #
-    # dashboard.yaml file to change the type from "sensor" to
+    # section at the end which assigns labels to the sensors, search for
+    # the binary sensor name and change the type fro "sensor" to
     # "binary_sensor".
+    #
+    # dashboard.yaml file, again search for the sensor name and change the
+    # type from "sensor" to "binary_sensor".
   binary_sensor:
     - name: XXXX_device_on
       friendly_name: "Device On"
