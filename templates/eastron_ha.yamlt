@@ -31,7 +31,7 @@
       icon: mdi:flash-triangle-outline
       state_topic: "XXXX/reactive_power/state"
       value_template: "{{ value | round(1) }}"
-      unit_of_measurement: "VAr"
+      unit_of_measurement: "var"
       device_class: reactive_power
 
     - name: XXXX_apparent_power
@@ -78,7 +78,7 @@
       icon: mdi:flash-triangle-outline
       state_topic: "XXXX/total_demand/state"
       value_template: "{{ value | round(1) }}"
-      unit_of_measurement: "W"
+      unit_of_measurement: "Wh"
       device_class: energy
       state_class: total
 
@@ -88,7 +88,7 @@
       icon: mdi:flash-triangle-outline
       state_topic: "XXXX/positive_demand/state"
       value_template: "{{ value | round(1) }}"
-      unit_of_measurement: "W"
+      unit_of_measurement: "Wh"
       device_class: energy
       state_class: total
 
@@ -98,7 +98,7 @@
       icon: mdi:flash-triangle-outline
       state_topic: "XXXX/reverse_demand/state"
       value_template: "{{ value | round(1) }}"
-      unit_of_measurement: "W"
+      unit_of_measurement: "Wh"
       device_class: energy
       state_class: total
 
