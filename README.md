@@ -36,7 +36,7 @@ YAML templates for the following devices are currently provided:
 - Generic pressure-based water level sensors, e.g. Seeed Studio, QuiDian: water_level_XXX.yamlt.
 - Generic temperature/humidity sensors, e.g. ComWinTop: temp_humid_XXX.yamlt.
 - MIA HVAC systems: mia_XXX.yamlt.
-- Modbus gateway boards for DS18B20 temperature sensors, e.g. eletechsup.
+- Modbus gateway boards for DS18B20 temperature sensors, e.g. eletechsup: temp_18b20_XXX.yamlt.
 - Waveshare I/O modules: waveshare_io_XXX.yamlt.
 - Wayjun pulse counter modules: pulse_count_XXX.yamlt.
 
