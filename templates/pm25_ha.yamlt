@@ -7,7 +7,7 @@
       availability_topic: "XXXX/temperature/availability"
       payload_available: "1"
       payload_not_available: "0"
-      unit_of_measurement: "�C"
+      unit_of_measurement: "°C"
       device_class: temperature
 
     - name: XXXX_humidity
@@ -45,7 +45,7 @@
       availability_topic: "XXXX/pm2_5/availability"
       payload_available: "1"
       payload_not_available: "0"
-      unit_of_measurement: "ppm"
+      unit_of_measurement: "µg/m³"
       device_class: pm25
 
     - name: XXXX_pm10
@@ -57,5 +57,5 @@
       availability_topic: "XXXX/pm10/availability"
       payload_available: "1"
       payload_not_available: "0"
-      unit_of_measurement: "ppm"
+      unit_of_measurement: "µg/m³"
       device_class: pm10
