@@ -98,7 +98,7 @@ fi
 
 compile_header()
 	{
-	for DNSNAME in $(grep "address: [a-z]" ${CONFIG_FILE_DIRECTORY}${HEADER_FILE_MQTT} | sed "s/^[ ]*address: //") ; do
+	for DNSNAME in $(grep "^[^#] \+address: [a-z]" ${CONFIG_FILE_DIRECTORY}${HEADER_FILE_MQTT} | sed "s/^[ ]*address: //") ; do
 
 		# Get the IP address of the device.  This isn't very fancy, it just
 		# returns the first one found without much checking on the assumption
@@ -240,25 +240,31 @@ cp ${CONFIG_FILE_DIRECTORY}${HEADER_FILE_TEMP} "${TEMP_FILE}"
 
 compile_header
 
-compile_template eastron grid indoors 10
-compile_template eastron non_backup indoors 11
-compile_template eastron backup indoors 12
-compile_template eastron heating indoors 13
-compile_template eastron hot_water indoors 14
+compile_template eastron grid "Grid" switchboard 10
+compile_template eastron non_backup "Non-backup" switchboard 11
+compile_template eastron backup "Backup" switchboard 12
+compile_template eastron downstairs "Downstairs" switchboard 13
+compile_template eastron hwc "HWC" switchboard 14
+compile_template eastron kitchen "Kitchen" switchboard 15
 
-compile_template waveshare_io waveshare_io indoors 20
+compile_template cdebyte_io cdebyte "Water" switchboard 20
 
-compile_template pulse_count water indoors 21
+compile_template temp_humid network "Network cupboard" network 10
 
-compile_template temp_humid basement basement 10
+compile_template temp_humid annex "Annex" annex 10
+compile_template temp_humid under_annex "Under Annex" annex 11
+compile_template temp_humid deck_left "Deck left" annex 12
+compile_template co2 deck_right "Deck right" annex 13
+compile_template pm25 environment "Environment" annex 14
 
-compile_template temp_humid front_door outdoors 10
-compile_template temp_humid back_door outdoors 11
-compile_template temp_humid shed outdoors 12
-compile_template co2 co2 outdoors 13
-compile_template pm25 pm25 outdoors 14
+compile_template water_level water_tank "Water tank" annex 20
 
-compile_template water_level water_tank outdoors 20
+compile_template mia hvac "HVAC" attic 1
+
+compile_template temp_humid attic_left "Attic Left" attic 10
+compile_template temp_humid attic_right "Attic Right" attic 11
+compile_template temp roof "Roof" attic 12
+compile_template temp_18b20 hwc_temp "HWC Temperature" attic 20
 
 #########################################################################
 # End of user-defined configuration settings
