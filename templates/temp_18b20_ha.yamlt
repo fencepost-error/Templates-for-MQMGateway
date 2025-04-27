@@ -1,0 +1,22 @@
+    - name: XXXX_hwc_case_temperature
+      friendly_name: "HWC Case Temperature"
+      unique_id: uniqueid__XXXX_hwc_case_temperature
+      icon: mdi:thermometer
+      state_topic: "XXXX/temperature_1/state"
+      value_template: "{{ value | round(1) }}"
+      availability_topic: "XXXX/temperature_1/availability"
+      payload_available: "1"
+      payload_not_available: "0"
+      unit_of_measurement: "°C"
+      device_class: temperature
+    - name: XXXX_hwc_water_temperature
+      friendly_name: "HWC Water Temperature"
+      unique_id: uniqueid__XXXX_hwc_water_temperature
+      icon: mdi:thermometer
+      state_topic: "XXXX/temperature_2/state"
+      value_template: "{{ value | round(1) }}"
+      availability_topic: "XXXX/temperature_2/availability"
+      payload_available: "1"
+      payload_not_available: "0"
+      unit_of_measurement: "°C"
+      device_class: temperature

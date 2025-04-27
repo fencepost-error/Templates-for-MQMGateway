@@ -1,0 +1,20 @@
+# Template for for 18B20 temperature sensors accessed via modbus
+# interface adapters, e.g. eletechsup.  These allow connection of
+# two sensors.
+#
+# Replace XXXX with topic name, YYYY with network, ZZZZ with device ID
+
+    - topic: XXXX/temperature_1
+      network: YYYY
+      slave: ZZZZ
+      state:
+        converter: std.divide(10,1)
+        register: 1
+        register_type: input
+    - topic: XXXX/temperature_2
+      network: YYYY
+      slave: ZZZZ
+      state:
+        converter: std.divide(10,1)
+        register: 2
+        register_type: input
