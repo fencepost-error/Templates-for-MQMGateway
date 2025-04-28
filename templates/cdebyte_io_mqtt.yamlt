@@ -82,6 +82,11 @@
     - topic: XXXX/do_output_ch1
       network: YYYY
       slave: ZZZZ
+      commands:
+        name: set
+        register: 1
+        register_type: coil
+        converter: std.map( '{ 0:1, 1:0 }' )
       state:
         register: 1
         register_type: coil
