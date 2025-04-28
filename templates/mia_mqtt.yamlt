@@ -13,6 +13,37 @@
 # present as an on/off indicator rather than trying to report individual
 # coil states.
 #
+# Setting things up is even more hairy, by trail and error these are the
+# values that do things, based on the control panel indicators:
+#
+# Set reg 23, ID = 1, Fn = 5 -> 0xFF00	("Start", starts unit, display lights up and shows it running).
+# Read 32 regs at 1, ID = 1, Fn = 1 -> 0E 00 40 00
+# Set reg 23, ID = 1, Fn = 5 -> 0x0000	("Stop", stops unit, display off).
+# Read 32 regs at 1, ID = 1, Fn = 1 -> 00 00 00 00
+#
+# Set reg 25, ID = 1, Fn = 5 -> 0xFF00	(Valve open)
+# Read 32 regs at 1, ID = 1, Fn = 1 -> 06 00 40 00
+# Set reg 25, ID = 1, Fn = 5 -> 0x0000	(Valve closed)
+# Read 32 regs at 1, ID = 1, Fn = 1 -> 0E 00 40 00
+#   (Display and coil read follows state).
+#
+# Set reg 27, ID = 1, Fn = 5 -> 0x0000	(Fan)
+# Read 32 regs at 1, ID = 1, Fn = 1 -> 0A 00 40 00
+# Set reg 27, ID = 1, Fn = 5 -> 0xFF00	(Dehumid)
+# Read 32 regs at 1, ID = 1, Fn = 1 -> 0A 00 40 00
+#   (Coil reads as 0 but display follows state)
+#
+# Set reg 29, ID = 1, Fn = 5 -> 0xFF00	(High speed)
+# Read 32 regs at 1, ID = 1, Fn = 1 -> 0E 00 40 00
+# Set reg 29, ID = 1, Fn = 5 -> 0x0000	(Low speed)
+# Read 32 regs at 1, ID = 1, Fn = 1 -> 0E 00 40 00
+#   (Coil reads as 0 but display follows state)
+#
+# It's safest not to try and change any of this and instead only use the
+# on/off functionality, with presets set via the control panel.  So we make
+# the on/off setting part of the device_on topic, specifically
+# device_on/set, 1 = on, 0 = off.
+#
 # Replace XXXX with topic name, YYYY with network, ZZZZ with device ID
 
     - topic: XXXX/cabinet_temperature
@@ -40,6 +71,10 @@
     - topic: XXXX/device_on
       network: YYYY
       slave: ZZZZ
+      commands:
+        name: set
+        register: 24
+        register_type: coil
       state:
         register: 24
         register_type: coil
