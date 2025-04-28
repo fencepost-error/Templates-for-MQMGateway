@@ -58,14 +58,16 @@ fi
 # resulting error message look like it's an error return value from a
 # libmodbus function.  Using invisible-to-the-editor tabs is also a problem,
 # better to catch this at this stage than later when they're in the config
-# file.
+# file.  Note the use of the awkward double-grep, this is because we need to
+# use $'\t' (unquoted) to feed a tab character to grep, which means that we
+# can't combine it with the comment-excluder.
 
 for file in "${CONFIG_FILE_DIRECTORY}"*.yamlt ; do
 	if [ "$(grep -c '^\s*register:\s*0\b' $file)" -gt 0 ] ; then
 		echo "Template $file uses 0-based registers, should be 1-based" >&2 ;
 		exit 1 ;
 	fi
-	if [ "$(grep -c $'\t' $file)" -gt 0 ] ; then
+	if [ "$(grep "^[^#]" $file | grep -c $'\t')" -gt 0 ] ; then
 		echo "Template $file contains tab characters, should be spaces" >&2 ;
 		exit 1 ;
 	fi
