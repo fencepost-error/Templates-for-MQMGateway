@@ -14,34 +14,35 @@
       device_class: water
       state_class: total
 
-    # This is a binary sensor which will require manually editing three
-    # separate locations in the config files:
+    # This is a switch which will require manually editing three separate
+    # locations in the config files:
     #
     # home_assistant.yaml to move it to the correct location at the end
     # of the list of standard sensors:
     # mqtt:
     #  sensor:
     #    <existing sensors>
-    #  binary_sensor:
-    #    <binary sensor>
+    #  switch:
+    #    <switch>
     #
     # home_assistant.yaml in the:
     # homeassistant:
     #   customize:
     # section at the end which assigns labels to the sensors, search for
-    # the binary sensor name and change the type fro "sensor" to
-    # "binary_sensor".
+    # the switch name and change the type from "sensor" to "switch".
     #
     # dashboard.yaml file, again search for the sensor name and change the
-    # type from "sensor" to "binary_sensor".
-  binary_sensor:
+    # type from "sensor" to "switch".
+  switch:
     - name: XXXX_do_output_ch1
       friendly_name: "HWC Enabled"
       unique_id: uniqueid__XXXX_do_output_ch1
       state_topic: "XXXX/do_output_ch1/state"
+      command_topic: "XXXX/do_output_ch1/set"
       availability_topic: "XXXX/do_output_ch1/availability"
       payload_available: "1"
       payload_not_available: "0"
       payload_on: "1"
       payload_off: "0"
-      device_class: plug
+      state_on: "1"
+      state_off: "0"
