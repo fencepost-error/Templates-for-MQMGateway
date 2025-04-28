@@ -34,34 +34,35 @@
       unit_of_measurement: "%"
       device_class: humidity
 
-    # This is a binary sensor which will require manually editing three
-    # separate locations in the config files:
+    # This is a switch which will require manually editing three separate
+    # locations in the config files:
     #
     # home_assistant.yaml to move it to the correct location at the end
     # of the list of standard sensors:
     # mqtt:
     #  sensor:
     #    <existing sensors>
-    #  binary_sensor:
-    #    <binary sensor>
+    #  switch:
+    #    <switch>
     #
     # home_assistant.yaml in the:
     # homeassistant:
     #   customize:
     # section at the end which assigns labels to the sensors, search for
-    # the binary sensor name and change the type fro "sensor" to
-    # "binary_sensor".
+    # the switch name and change the type from "sensor" to "switch".
     #
     # dashboard.yaml file, again search for the sensor name and change the
-    # type from "sensor" to "binary_sensor".
-  binary_sensor:
+    # type from "sensor" to "switch".
+  switch:
     - name: XXXX_device_on
       friendly_name: "Device On"
       unique_id: uniqueid__XXXX_device_on
       state_topic: "XXXX/device_on/state"
+      command_topic: "XXXX/device_on/set"
       availability_topic: "XXXX/device_on/availability"
       payload_available: "1"
       payload_not_available: "0"
       payload_on: "1"
       payload_off: "0"
-      device_class: running
+      state_on: "1"
+      state_off: "0"
