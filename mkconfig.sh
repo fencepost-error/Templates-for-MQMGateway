@@ -20,6 +20,7 @@ HEADER_FILE_TEMP="config_header_temp.yaml"
 OUTPUT_FILE_MQTT="config.yaml"
 OUTPUT_FILE_HA="home_assistant.yaml"
 OUTPUT_FILE_DASHBOARD="dashboard.yaml"
+SWITCHES_FIXUP_FILE="switches.tmp"
 TEMP_FILE=_mkconfig.tmp
 DO_INSTALL=0
 DO_MQTT=0
@@ -77,6 +78,12 @@ for file in "${CONFIG_FILE_DIRECTORY}"*.yamlt ; do
 		echo "         $OUTPUT_FILE_HA to move them into the binary_sensor: category and" >&2 ;
 		echo "         $OUTPUT_FILE_DASHBOARD to change the type from sensor to binary_sensor." >&2 ;
 	fi
+	if [ "$(grep -c '^\s*button:' $file)" -gt 0 ] ; then
+		echo "Warning: $file contains button: definitions" >&2 ;
+		echo "         alongside standard sensors, this will require manual editing of" >&2 ;
+		echo "         $OUTPUT_FILE_HA to move them into the button: category and" >&2 ;
+		echo "         $OUTPUT_FILE_DASHBOARD to change the type from sensor to button." >&2 ;
+	fi
 done
 
 # Clean up files from previous runs.
@@ -89,6 +96,9 @@ if [ -f ${OUTPUT_FILE_HA} ] ; then
 fi
 if [ -f ${OUTPUT_FILE_DASHBOARD} ] ; then
 	rm ${OUTPUT_FILE_DASHBOARD} ;
+fi
+if [ -f ${SWITCHES_FIXUP_FILE} ] ; then
+	rm ${SWITCHES_FIXUP_FILE} ;
 fi
 if [ -f ${TEMP_FILE} ] ; then
 	rm ${TEMP_FILE} ;
@@ -134,11 +144,60 @@ add_build_info()
 	echo "    # Sensor group '${NAME}' added from '${TEMPLATE_FILE}' template" >> "${OUTPUT_FILE}"
 	}
 
+# Fix up switches by moving them to their own section following the sensors.
+# We use ed for this because, while it's possible to do it with sed, the
+# process is pretty messy.  This assumes that the switch definitions are
+# delimited with "switch:" at the start and "state_off" at the end.
+
+fix_switches()
+	{
+	FILE=$1
+
+	# Check whether there are any switches present.
+	SWITCH_COUNT=$(grep -c "^  switch:$" "$FILE")
+	if [ $SWITCH_COUNT -le 0 ] ; then
+		return ;
+	fi
+
+	if [ $VERBOSE -eq 1 ] ; then
+		echo "Fixing up ${SWITCH_COUNT} entities as switches, not sensors" ;
+	fi
+
+	# Generate a list of entities that are switches rather than sensors.
+	sed -n "/^  switch:$/{ n; p }" "${OUTPUT_FILE_HA}" | sed 's/    - name: //' > "${SWITCHES_FIXUP_FILE}" ;
+
+	# Move each switch: entry down past the sensor: section.
+	for i in $(seq 1 $SWITCH_COUNT) ;
+	do
+		ed -s "$FILE" << __END__
+/^  switch:$/,/^      state_off:.*$/+1m/^homeassistant:$/-
+wq
+__END__
+	done
+
+	# Delete the duplicate switch: lines created by moving each
+	# individual switch section to the end of the file.
+	sed -i '0,/^  switch:$/!{//d}' "${FILE}"
+
+	# Add explanatory text to the "switch" entry.  This used to be required
+	# to explain the need to hand-edit the switch names but is no longer
+	# necessary since the next block of code does this automatically.
+#	sed -i -e "/^  switch:$/{rtemplates/config_info_switches.yamlt" -e "d}" "${FILE}"
+
+	# Rename each switch from sensor.* to switch.*
+	while read LINE ; do
+		sed -i "s/sensor.${LINE}/switch.${LINE}/g" "${FILE}" ;
+		sed -i "s/sensor.${LINE}/switch.${LINE}/g" "${OUTPUT_FILE_DASHBOARD}" ;
+	done < "${SWITCHES_FIXUP_FILE}"
+
+	rm "${SWITCHES_FIXUP_FILE}"
+	}
+
 # Create the various YAML files and configs needed by Home Assistant.
 
 compile_template_ha()
 	{
-	TEMPLATE_FILE=$1
+	local TEMPLATE_FILE=$(echo $1 | sed 's/:/_/g')
 	TOPIC=$2
 	NAME=$3
 	TEMP_FILE_HA="_ha_temp.yaml"
@@ -174,7 +233,7 @@ compile_template_ha()
 
 compile_template_mqtt()
 	{
-	TEMPLATE_FILE=$1
+	local TEMPLATE_FILE=$(echo $1 | sed 's/:.*//g')
 	TOPIC=$2
 	NAME=$3
 	NETWORK=$4
@@ -229,8 +288,19 @@ cp ${CONFIG_FILE_DIRECTORY}${HEADER_FILE_TEMP} "${TEMP_FILE}"
 #	Template file	MQTT topic	HA friendly name	Network		Modbus address
 #	temp_humid		annex		"Annex"				annex		10
 #
+# The 'Template file' can optionally include a colon followed by the HA
+# subtype if a single template is being used for multiple entities in HA.
+# For example if a template 'sensor' is being used for indoors sensors and
+# outdoors sensors the two would be 'sensor:indoors' and 'sensor:outdoors',
+# with the generated MQTT using sensor.yamlt and the generated HA using
+# sensor_indoors.yamlt and sensor_outdoors.yamlt.  This is because MQTT
+# distinguishes between the two using the MQTT topic while HA uses a text
+# label, requiring different labels in the different yamlt files for HA.
+#
 # The 'Network' value is the network name given in config_header_mqtt.yaml,
-# which is mapped to an IP address by the config script for use by MQMGateway.
+# which is mapped to an IP address by the config script for use by
+# MQMGateway.  This is just a label, for example the network name "annex"
+# would be mapped to device "waveshare.annex.lan" in the YAML config.
 #
 # Note that the topic_name must be all lowercase since HA mangles identifiers
 # into lowercase, leading to mismatches if any of the config files refer
@@ -249,9 +319,10 @@ compile_template eastron downstairs "Downstairs" switchboard 13
 compile_template eastron hwc "HWC" switchboard 14
 compile_template eastron kitchen "Kitchen" switchboard 15
 
-compile_template cdebyte_io cdebyte "Water" switchboard 20
+compile_template cdebyte_io_2240 io_switchboard "Water" switchboard 20
 
 compile_template temp_humid network "Network cupboard" network 10
+compile_template cdebyte_io_4040:network io_network "Network cupboard" network 20
 
 compile_template temp_humid annex "Annex" annex 10
 compile_template temp_humid under_annex "Under Annex" annex 11
@@ -260,6 +331,7 @@ compile_template co2 deck_right "Deck right" annex 13
 compile_template pm25 environment "Environment" annex 14
 
 compile_template water_level water_tank "Water tank" annex 20
+# compile_template cdebyte_io_4040:annex io_annex "Annex" annex 20
 
 compile_template mia hvac "HVAC" attic 1
 
@@ -272,9 +344,20 @@ compile_template temp_18b20 hwc_temp "HWC Temperature" attic 20
 # End of user-defined configuration settings
 #########################################################################
 
-echo "" >> "${OUTPUT_FILE_HA}"
-cat "${TEMP_FILE}" >> "${OUTPUT_FILE_HA}"
-rm "${TEMP_FILE}"
+# If we're generating the HA output, append the friendly-name info to the
+# config file and sort out non-sensor entities that need to go into a
+# specific location in the config file.
+
+if [ $DO_HA -eq 1 ] ; then
+	# Add the friendly names to the config file.
+	echo "" >> "${OUTPUT_FILE_HA}" ;
+	cat "${TEMP_FILE}" >> "${OUTPUT_FILE_HA}" ;
+	rm "${TEMP_FILE}" ;
+
+	# Move entities that are switches down into the correct location
+	# before the friendly names we just added above.
+	fix_switches "${OUTPUT_FILE_HA}" ;
+fi
 
 # If we're not installing the config in MQMGateway, we're done
 
