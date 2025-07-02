@@ -34,25 +34,6 @@
       unit_of_measurement: "%"
       device_class: humidity
 
-    # This is a switch which will require manually editing three separate
-    # locations in the config files:
-    #
-    # home_assistant.yaml to move it to the correct location at the end
-    # of the list of standard sensors:
-    # mqtt:
-    #  sensor:
-    #    <existing sensors>
-    #  switch:
-    #    <switch>
-    #
-    # home_assistant.yaml in the:
-    # homeassistant:
-    #   customize:
-    # section at the end which assigns labels to the sensors, search for
-    # the switch name and change the type from "sensor" to "switch".
-    #
-    # dashboard.yaml file, again search for the sensor name and change the
-    # type from "sensor" to "switch".
   switch:
     - name: XXXX_device_on
       friendly_name: "Device On"
