@@ -1,0 +1,31 @@
+    # CDEbyte produces an entire family of general-purpose I/O devices,
+    # these don't have specific roles so each template file will require
+    # custom settings based on what the I/O channels are used for.  The
+    # following is for smoke sensing and dehumidifier control.
+    #
+    # Note that the smoke sensing is a bit unusual, this should be a binary
+    # sensor with device-class smoke, however we're using a standard sensor
+    # since it's a counting input that gets converted into a template binary
+    # sensor.
+    - name: XXXX_count_ch1
+      friendly_name: "Network Cupboard Smoke Count"
+      unique_id: uniqueid__XXXX_count_ch1
+      icon: mdi:fire
+      state_topic: "XXXX/di_count_ch1/state"
+      availability_topic: "XXXX/di_count_ch1/availability"
+      payload_available: "1"
+      payload_not_available: "0"
+
+  switch:
+    - name: XXXX_do_output_ch1
+      friendly_name: "Network Cupboard Dehumidifier"
+      unique_id: uniqueid__XXXX_do_output_ch1
+      state_topic: "XXXX/do_output_ch1/state"
+      command_topic: "XXXX/do_output_ch1/set"
+      availability_topic: "XXXX/do_output_ch1/availability"
+      payload_available: "1"
+      payload_not_available: "0"
+      payload_on: "1"
+      payload_off: "0"
+      state_on: "1"
+      state_off: "0"

@@ -1,0 +1,163 @@
+# Template for for CDEbyte ME31 AAAX2240 I/O modules (2DI, 2AI, 4DO).  Inputs
+# are discrete inputs, outputs are coils.  Note the same values in the 2240
+# docs are wrong, as per the comments in the setings below.
+#
+# Replace XXXX with topic name, YYYY with network, ZZZZ with device ID
+
+    # Digital input CH1
+    - topic: XXXX/di_input_ch1
+      network: YYYY
+      slave: ZZZZ
+      state:
+        register: 1
+        register_type: bit
+    - topic: XXXX/di_count_ch1
+      network: YYYY
+      slave: ZZZZ
+      state:
+        register: 2528
+        register_type: holding
+    - topic: XXXX/di_reset_method_ch1
+      network: YYYY
+      slave: ZZZZ
+      state:
+        register: 2628
+        register_type: holding
+        refresh: 60min
+        converter: std.map( '{ 0:"clear on read", 1:"manual clear" }' )
+    - topic: XXXX/di_trigger_mode_ch1
+      network: YYYY
+      slave: ZZZZ
+      state:
+        # The documentation for this is wrong, the MA01-AXCX4020 manual gives
+        # it as 2827 which also matches the overall pattern of 2x27 for the
+        # registers.
+        register: 2828
+        register_type: holding
+        refresh: 60min
+        # The manual doesn't document these, the following values are from
+        # the MA01-XXCX0080 manual which lists DI modes even though it's a
+        # DO-only device, they were later confirmed via email by CDEbyte.
+        # For level triggering the manual, section 4.3.1, says it looks for
+        # two edges and counts it as one trigger.
+        converter: std.map( '{ 0:"rising edge", 1:"falling edge", 2:"level trigger" }' )
+
+    # Digital input CH2
+    - topic: XXXX/di_input_ch2
+      network: YYYY
+      slave: ZZZZ
+      state:
+        register: 2
+        register_type: bit
+    - topic: XXXX/di_count_ch2
+      network: YYYY
+      slave: ZZZZ
+      state:
+        register: 2529
+        register_type: holding
+    - topic: XXXX/di_reset_method_ch2
+      network: YYYY
+      slave: ZZZZ
+      state:
+        register: 2629
+        register_type: holding
+        refresh: 60min
+        converter: std.map( '{ 0:"clear on read", 1:"manual clear" }' )
+    - topic: XXXX/di_trigger_mode_ch2
+      network: YYYY
+      slave: ZZZZ
+      state:
+        # The documentation for this is wrong, the MA01-AXCX4020 manual gives
+        # it as 2827 which also matches the overall pattern of 2x27 for the
+        # registers.
+        register: 2829
+        register_type: holding
+        refresh: 60min
+        # The manual doesn't document these, the following values are from
+        # the MA01-XXCX0080 manual which lists DI modes even though it's a
+        # DO-only device, they were later confirmed via email by CDEbyte.
+        # For level triggering the manual, section 4.3.1, says it looks for
+        # two edges and counts it as one trigger.
+        converter: std.map( '{ 0:"rising edge", 1:"falling edge", 2:"level trigger" }' )
+
+    # Digital input general configuration
+    - topic: XXXX/di_filter_param
+      network: YYYY
+      slave: ZZZZ
+      state:
+        register: 1202
+        register_type: holding
+        refresh: 60min
+
+    # Analog input.  Not used at the moment.
+
+    # Digital output.  There are four coils, we only use one for now.  This
+    # shows an example of driving a NC relay in which an output value of 0
+    # means the relay isn't energised and the circuit is closed and an
+    # output value of 1 means the relay is energised and the circuit is open.
+    # To deal with this we map a value of 0 to 1 and 1 to 0.
+    - topic: XXXX/do_output_ch1
+      network: YYYY
+      slave: ZZZZ
+      commands:
+        name: set
+        register: 1
+        register_type: coil
+        converter: std.map( '{ 0:1, 1:0 }' )
+      state:
+        register: 1
+        register_type: coil
+        converter: std.map( '{ 0:1, 1:0 }' )
+    - topic: XXXX/do_reset_state_ch1
+      network: YYYY
+      slave: ZZZZ
+      state:
+        register: 101
+        register_type: holding
+    - topic: XXXX/do_working_mode_ch1
+      network: YYYY
+      slave: ZZZZ
+      state:
+        register: 1401
+        register_type: holding
+        refresh: 60min
+        converter: std.map( '{ 0:"level", 1:"pulse", 2:"follow", 3:"reverse follow", 4:"trigger flip" }' )
+    - topic: XXXX/do_pulse width_ch1
+      network: YYYY
+      slave: ZZZZ
+      state:
+        register: 1501
+        register_type: holding
+        refresh: 60min
+    - topic: XXXX/do_follow source_ch1
+      network: YYYY
+      slave: ZZZZ
+      state:
+        # Again, not documented the the manual, this is from the MA01-XXCX0080
+        # manual.
+        register: 1601
+        register_type: holding
+        refresh: 60min
+        # This should be the following, however modmqtt thinks the values
+        # are out of range.
+        # converter: std.map( '{ 0:"follow DI1", 1:"follow DI2", 32768:"follow AI1", 32769:"follow AI2" }' )
+        converter: std.map( '{ 0:"follow DI1", 1:"follow DI2" }' )
+
+      # Module control registers.  Most of these are only set once and done
+      # via the front panel, these are the few that might be useful.
+    - topic: XXXX/operating_mode
+      network: YYYY
+      slave: ZZZZ
+      state:
+        register: 2279
+        register_type: holding
+        refresh: 60min
+        converter: std.map( '{ 0:"server", 1:"client" }' )
+    - topic: XXXX/modbus_tcp_rtu_bridge
+      network: YYYY
+      slave: ZZZZ
+      state:
+        register: 2281
+        register_type: holding
+        refresh: 60min
+        converter: std.map( '{ 0:"off", 1:"on" }' )
