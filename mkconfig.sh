@@ -20,7 +20,7 @@ HEADER_FILE_TEMP="config_header_temp.yaml"
 OUTPUT_FILE_MQTT="config.yaml"
 OUTPUT_FILE_HA="home_assistant.yaml"
 OUTPUT_FILE_DASHBOARD="dashboard.yaml"
-SWITCHES_FIXUP_FILE="switches.tmp"
+FIXUP_FILE="fixup.tmp"
 TEMP_FILE=_mkconfig.tmp
 DO_INSTALL=0
 DO_MQTT=0
@@ -72,12 +72,6 @@ for file in "${CONFIG_FILE_DIRECTORY}"*.yamlt ; do
 		echo "Template $file contains tab characters, should be spaces" >&2 ;
 		exit 1 ;
 	fi
-	if [ "$(grep -c '^\s*binary_sensor:' $file)" -gt 0 ] ; then
-		echo "Warning: $file contains binary_sensor: definitions" >&2 ;
-		echo "         alongside standard sensors, this will require manual editing of" >&2 ;
-		echo "         $OUTPUT_FILE_HA to move them into the binary_sensor: category and" >&2 ;
-		echo "         $OUTPUT_FILE_DASHBOARD to change the type from sensor to binary_sensor." >&2 ;
-	fi
 	if [ "$(grep -c '^\s*button:' $file)" -gt 0 ] ; then
 		echo "Warning: $file contains button: definitions" >&2 ;
 		echo "         alongside standard sensors, this will require manual editing of" >&2 ;
@@ -97,8 +91,8 @@ fi
 if [ -f ${OUTPUT_FILE_DASHBOARD} ] ; then
 	rm ${OUTPUT_FILE_DASHBOARD} ;
 fi
-if [ -f ${SWITCHES_FIXUP_FILE} ] ; then
-	rm ${SWITCHES_FIXUP_FILE} ;
+if [ -f ${FIXUP_FILE} ] ; then
+	rm ${FIXUP_FILE} ;
 fi
 if [ -f ${TEMP_FILE} ] ; then
 	rm ${TEMP_FILE} ;
@@ -144,10 +138,12 @@ add_build_info()
 	echo "    # Sensor group '${NAME}' added from '${TEMPLATE_FILE}' template" >> "${OUTPUT_FILE}"
 	}
 
-# Fix up switches by moving them to their own section following the sensors.
-# We use ed for this because, while it's possible to do it with sed, the
-# process is pretty messy.  This assumes that the switch definitions are
-# delimited with "switch:" at the start and "state_off" at the end.
+# Fix up switches and binary sensors by moving them to their own section
+# following the sensors.  We use ed for this because, while it's possible to
+# do it with sed, the process is pretty messy.  This assumes that the switch
+# definitions are delimited with "switch:" at the start and "state_off" at
+# the end, and the binary sensors with "binary_sensor:" and
+# "payload_not_available"
 
 fix_switches()
 	{
@@ -164,11 +160,10 @@ fix_switches()
 	fi
 
 	# Generate a list of entities that are switches rather than sensors.
-	sed -n "/^  switch:$/{ n; p }" "${OUTPUT_FILE_HA}" | sed 's/    - name: //' > "${SWITCHES_FIXUP_FILE}" ;
+	sed -n "/^  switch:$/{ n; p }" "${OUTPUT_FILE_HA}" | sed 's/    - name: //' > "${FIXUP_FILE}" ;
 
 	# Move each switch: entry down past the sensor: section.
-	for i in $(seq 1 $SWITCH_COUNT) ;
-	do
+	for i in $(seq 1 $SWITCH_COUNT) ; do
 		ed -s "$FILE" << __END__
 /^  switch:$/,/^      state_off:.*$/+1m/^homeassistant:$/-
 wq
@@ -188,9 +183,54 @@ __END__
 	while read LINE ; do
 		sed -i "s/sensor.${LINE}/switch.${LINE}/g" "${FILE}" ;
 		sed -i "s/sensor.${LINE}/switch.${LINE}/g" "${OUTPUT_FILE_DASHBOARD}" ;
-	done < "${SWITCHES_FIXUP_FILE}"
+	done < "${FIXUP_FILE}"
 
-	rm "${SWITCHES_FIXUP_FILE}"
+	rm "${FIXUP_FILE}"
+	}
+
+fix_binary_sensors()
+	{
+	FILE=$1
+
+	# Check whether there are any binary sensors present.
+	BINARY_SENSOR_COUNT=$(grep -c "^  binary_sensor:$" "$FILE")
+	if [ $BINARY_SENSOR_COUNT -le 0 ] ; then
+		return ;
+	fi
+
+	if [ $VERBOSE -eq 1 ] ; then
+		echo "Fixing up ${BINARY_SENSOR_COUNT} entities as binary sensors, not sensors" ;
+	fi
+
+	# Generate a list of entities that are binary sensors rather than sensors.
+	sed -n "/^  binary_sensor:$/{ n; p }" "${OUTPUT_FILE_HA}" | sed 's/    - name: //' > "${FIXUP_FILE}" ;
+
+	# Move each binary_sensor: entry down past the sensor: section.  This has
+	# to be done as a two-stage operation since there are multiple instances
+	# of payload_not_available: which confuses ed, so we first move to the
+	# binary_sensor: line and then select from there to the first
+	# payload_not_available: that follows it.  The annoying redirect to
+	# /dev/null is necessary because the first command is regarded as us
+	# telling ed to say something, which overrides the -s quiet mode.
+	for i in $(seq 1 $BINARY_SENSOR_COUNT) ; do
+		ed -s "$FILE" > /dev/null << __END__
+1,/^  binary_sensor:$/
+.,/^      payload_not_available:.*$/+1m/^homeassistant:$/-
+wq
+__END__
+	done
+
+	# Delete the duplicate binary_sensor: lines created by moving each
+	# individual switch section to the end of the file.
+	sed -i '0,/^  binary_sensor:$/!{//d}' "${FILE}"
+
+	# Rename each switch from sensor.* to binary_sensor.*
+	while read LINE ; do
+		sed -i "s/sensor.${LINE}/binary_sensor.${LINE}/g" "${FILE}" ;
+		sed -i "s/sensor.${LINE}/binary_sensor.${LINE}/g" "${OUTPUT_FILE_DASHBOARD}" ;
+	done < "${FIXUP_FILE}"
+
+	rm "${FIXUP_FILE}"
 	}
 
 # Create the various YAML files and configs needed by Home Assistant.
@@ -213,13 +253,13 @@ compile_template_ha()
 
 	# Generate the sensor config file for HA.
 	add_build_info "$NAME" "${TEMPLATE_FILE}" "${OUTPUT_FILE_HA}"
-	grep -v "friendly_name:" "${CONFIG_FILE_DIRECTORY}${TEMPLATE_FILE}"_ha.yamlt | sed '/^#/d' | sed s/XXXX/"${TOPIC}"/g | sed s/YYYY/"${NAME}"/g > "${TEMP_FILE_HA}"
+	grep -v "friendly_name:" "${CONFIG_FILE_DIRECTORY}${TEMPLATE_FILE}"_ha.yamlt | sed '/^[[:space:]]*#/d' | sed s/XXXX/"${TOPIC}"/g | sed s/YYYY/"${NAME}"/g > "${TEMP_FILE_HA}"
 	cat "${TEMP_FILE_HA}" >> "${OUTPUT_FILE_HA}"
 
 	# Generate the additional sensor friendly-name section needed for the
 	# sensor config file.
 	echo "" >> "${TEMP_FILE}"
-	cat "${CONFIG_FILE_DIRECTORY}${TEMPLATE_FILE}"_ha.yamlt | sed '/^#/d' | sed s/XXXX/"${TOPIC}"/g | sed -E s/"^(.*- name:) (.*)$"/"    sensor.\2:"/g | grep --no-group-separator "sensor\." -A 1 >> "${TEMP_FILE}"
+	cat "${CONFIG_FILE_DIRECTORY}${TEMPLATE_FILE}"_ha.yamlt | sed '/^[[:space:]]*#/d' | sed s/XXXX/"${TOPIC}"/g | sed -E s/"^(.*- name:) (.*)$"/"    sensor.\2:"/g | grep --no-group-separator "sensor\." -A 1 >> "${TEMP_FILE}"
 
 	# Generate the dashboard config file for HA.
 	printf "\n      - type: entities\n        title: %s\n        entities:\n" "$NAME" >> "${OUTPUT_FILE_DASHBOARD}"
@@ -330,15 +370,15 @@ compile_template temp_humid deck_left "Deck left" annex 12
 compile_template co2 deck_right "Deck right" annex 13
 compile_template pm25 environment "Environment" annex 14
 
-compile_template water_level water_tank "Water tank" annex 20
-# compile_template cdebyte_io_4040:annex io_annex "Annex" annex 20
+compile_template cdebyte_io_4040:annex io_annex "Annex" annex 20
+compile_template water_level water_tank "Water tank" annex 30
 
 compile_template mia hvac "HVAC" attic 1
 
 compile_template temp_humid attic_left "Attic Left" attic 10
 compile_template temp_humid attic_right "Attic Right" attic 11
 compile_template temp roof "Roof" attic 12
-compile_template temp_18b20 hwc_temp "HWC Temperature" attic 20
+compile_template temp_18b20 hwc_temp "Water" attic 20
 
 #########################################################################
 # End of user-defined configuration settings
@@ -354,9 +394,16 @@ if [ $DO_HA -eq 1 ] ; then
 	cat "${TEMP_FILE}" >> "${OUTPUT_FILE_HA}" ;
 	rm "${TEMP_FILE}" ;
 
-	# Move entities that are switches down into the correct location
-	# before the friendly names we just added above.
+	# Move entities that are switches and binary sensors down into the
+	# correct location before the friendly names we just added above.
 	fix_switches "${OUTPUT_FILE_HA}" ;
+	fix_binary_sensors "${OUTPUT_FILE_HA}" ;
+
+	# Check for duplicate entries in the dashboard file.
+	if [ "$(grep 'title:' ${OUTPUT_FILE_DASHBOARD} | sort | uniq -D | wc -l)" -gt 0 ] ; then
+		echo "Warning: ${OUTPUT_FILE_DASHBOARD} contains duplicate cards, will need manual fixup:" ;
+		echo "$(grep 'title:' ${OUTPUT_FILE_DASHBOARD} | sort | uniq -D )" ;
+	fi
 fi
 
 # If we're not installing the config in MQMGateway, we're done
