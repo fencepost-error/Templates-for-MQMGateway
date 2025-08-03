@@ -10,7 +10,8 @@
 # To control what goes into the config file, scroll down to the section
 # with the comment '# Edit the following'.
 #
-# If you're not generating your YAML with sed you're just not trying.
+# If you're not generating your YAML with sed and awk then you're just not
+# trying.
 
 CONFIG_FILE_DIRECTORY=""
 HEADER_FILE_MQTT="config_header_mqtt.yaml"
@@ -142,8 +143,7 @@ add_build_info()
 # following the sensors.  We use ed for this because, while it's possible to
 # do it with sed, the process is pretty messy.  This assumes that the switch
 # definitions are delimited with "switch:" at the start and "state_off" at
-# the end, and the binary sensors with "binary_sensor:" and
-# "payload_not_available"
+# the end, and the binary sensors with "binary_sensor:" and "payload_off".
 
 fix_switches()
 	{
@@ -207,15 +207,15 @@ fix_binary_sensors()
 
 	# Move each binary_sensor: entry down past the sensor: section.  This has
 	# to be done as a two-stage operation since there are multiple instances
-	# of payload_not_available: which confuses ed, so we first move to the
-	# binary_sensor: line and then select from there to the first
-	# payload_not_available: that follows it.  The annoying redirect to
-	# /dev/null is necessary because the first command is regarded as us
-	# telling ed to say something, which overrides the -s quiet mode.
+	# of payload_off: which confuses ed, so we first move to the binary_sensor:
+	# line and then select from there to the first payload_off: that follows
+	# it.  The annoying redirect to /dev/null is necessary because the first
+	# command is regarded as us telling ed to say something, which overrides
+	# the -s quiet mode.
 	for i in $(seq 1 $BINARY_SENSOR_COUNT) ; do
 		ed -s "$FILE" > /dev/null << __END__
 1,/^  binary_sensor:$/
-.,/^      payload_not_available:.*$/+1m/^homeassistant:$/-
+.,/^      payload_off:.*$/+1m/^homeassistant:$/-
 wq
 __END__
 	done
@@ -231,6 +231,47 @@ __END__
 	done < "${FIXUP_FILE}"
 
 	rm "${FIXUP_FILE}"
+	}
+
+# Fix up the dashboard file to merge duplicate cards, because of the
+# template-based generation this can occur when multiple entities in
+# different devices or networks are assigned to the same card.
+#
+# Note the quoted delimiter, since we don't want to expand $variables used
+# by awk using bash variables.
+
+AWK_CODE=$(cat << '__END__'
+/title:/ {
+    # Record each new card type
+    category=$2 $3 $4 $5
+    if ( entry[category] == "" ) {
+        entry[category] = "      - type: entities\n" $0 "\n        entities:"
+        order[++noCategories] = category
+        }
+    next
+    }
+/entity:/ {
+    # Add/append the entities for each card type
+    if ( 0 == index( entry[category], $0 ) )
+        entry[category] = entry[category] "\n" $0
+    }
+END {
+    # Output the formatted YAML data
+    for ( occurence = 1 ; occurence <= noCategories ; occurence++ )
+        print entry[order[occurence]] (++i < noCategories ? "\n": "")
+    }
+__END__
+)
+
+fix_dashboard()
+	{
+	# We can't use gawk's -i for in-place processing because Debian ships
+	# with mawk by default which doesn't support this.
+	awk "${AWK_CODE}" "${OUTPUT_FILE_DASHBOARD}" > "dashboard.tmp" && mv "dashboard.tmp" "${OUTPUT_FILE_DASHBOARD}"
+	mv "${OUTPUT_FILE_DASHBOARD}" "${TEMP_FILE}"
+	cp ${CONFIG_FILE_DIRECTORY}${HEADER_FILE_DASHBOARD} "${OUTPUT_FILE_DASHBOARD}"
+	cat "${TEMP_FILE}" >> "${OUTPUT_FILE_DASHBOARD}"
+	rm "${TEMP_FILE}"
 	}
 
 # Create the various YAML files and configs needed by Home Assistant.
@@ -318,7 +359,7 @@ compile_template()
 
 cp ${CONFIG_FILE_DIRECTORY}${HEADER_FILE_MQTT} ${OUTPUT_FILE_MQTT}
 cp ${CONFIG_FILE_DIRECTORY}${HEADER_FILE_HA} ${OUTPUT_FILE_HA}
-cp ${CONFIG_FILE_DIRECTORY}${HEADER_FILE_DASHBOARD} "${OUTPUT_FILE_DASHBOARD}"
+#cp ${CONFIG_FILE_DIRECTORY}${HEADER_FILE_DASHBOARD} "${OUTPUT_FILE_DASHBOARD}"
 cp ${CONFIG_FILE_DIRECTORY}${HEADER_FILE_TEMP} "${TEMP_FILE}"
 
 # "Compile" the input files into the config files.  compile_header arguments
@@ -385,8 +426,8 @@ compile_template temp_18b20 hwc_temp "Water" attic 20
 #########################################################################
 
 # If we're generating the HA output, append the friendly-name info to the
-# config file and sort out non-sensor entities that need to go into a
-# specific location in the config file.
+# config file, sort out non-sensor entities that need to go into a specific
+# location in the config file, and fix up the dashboard file if required.
 
 if [ $DO_HA -eq 1 ] ; then
 	# Add the friendly names to the config file.
@@ -399,7 +440,12 @@ if [ $DO_HA -eq 1 ] ; then
 	fix_switches "${OUTPUT_FILE_HA}" ;
 	fix_binary_sensors "${OUTPUT_FILE_HA}" ;
 
-	# Check for duplicate entries in the dashboard file.
+	# Fix up the dashboard file to resolve duplicate cards created via
+	# entities in different devices/networks.
+	fix_dashboard
+
+	# Check for duplicate entries in the dashboard file.  Left here as a
+	# check but rendered obsolete by fix_dashboard.
 	if [ "$(grep 'title:' ${OUTPUT_FILE_DASHBOARD} | sort | uniq -D | wc -l)" -gt 0 ] ; then
 		echo "Warning: ${OUTPUT_FILE_DASHBOARD} contains duplicate cards, will need manual fixup:" ;
 		echo "$(grep 'title:' ${OUTPUT_FILE_DASHBOARD} | sort | uniq -D )" ;
